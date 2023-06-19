@@ -1,19 +1,42 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+import functions, { logger } from 'firebase-functions';
+import vision from '@google-cloud/vision';
+import admin from 'firebase-admin';
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+// initialize admin: ONLY USE THIS ON TRUSTED ENV LIKE FUNCTIONS NOT IN NEXT
+admin.initializeApp();
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+// read that the object (in this case image on finalization of upload):
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const readReceiptDetails = functions.storage.object().onFinalize(async (object) => {
+    const imageBucket = `gs://${object.bucket}/${object.name}`;
+    const client = new vision.ImageAnnotatorClient();
+
+    const [textDetection] = await client.textDetection(imageBucket);
+    const [annotation] = textDetection.textAnnotations;
+    const text = annotation ? annotation.description : '';
+    logger.log(text);
+
+    // logger to test if there's text annotated form the image.
+    // for now let's just hardcode the result as it is to demo
+
+    // get uid
+    // object.name is userId/timestamp
+    const re = /(.*)\//;
+    const uid = re.exec(object.name)[1];
+
+    // code above is because we want ot extract userId form userId/timestamp
+
+    const receipt = {
+        address: '123 Happy St, World 1',
+        amount: '23.45',
+        date: new Date(),
+        imageBucket,
+        items: 'best bla, lorem ipsum, dolr',
+        locationName: 'Best Restaurant',
+        uid,
+        isConfirmed: false
+    };
+
+    // use the admin to add the receipt to firestore
+    admin.firestore().collection('receipts').add(receipt);
+});
