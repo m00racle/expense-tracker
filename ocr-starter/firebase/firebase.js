@@ -23,6 +23,13 @@ import { getStorage } from 'firebase/storage';
 // Configure Firebase.
 const firebaseConfig = {
   // Insert your Firebase project's configuration here 
+  apiKey: process.env.NEXT_PUBLIC_EXP_TRACK_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_EXP_TRACK_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_EXP_TRACK_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_EXP_TRACK_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_EXP_TRACK_MESS_ID,
+  appId: process.env.NEXT_PUBLIC_EXP_TRACK_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_EXP_TRACK_MEASUREMENT_ID
 };
 
 export const app = initializeApp(firebaseConfig);
